@@ -26,7 +26,7 @@ jobs:
         run: composer install --prefer-dist --no-interaction
 
       - name: Run PHPStan
-        run: vendor/bin/phpstan analyse src/ tests/ --level=6 --no-progress
+        run: vendor/bin/phpstan analyse --no-progress --error-format=github
 
   psalm:
     runs-on: ubuntu-latest

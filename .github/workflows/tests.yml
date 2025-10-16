@@ -97,7 +97,7 @@ jobs:
         run: vendor/bin/phpcs --standard=PSR12 src/
 
       - name: Run PHPStan
-        run: vendor/bin/phpstan analyse src/ --level=5
+        run: vendor/bin/phpstan analyse --no-progress
 
   security:
     runs-on: ubuntu-latest
