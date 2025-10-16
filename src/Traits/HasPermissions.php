@@ -83,7 +83,7 @@ trait HasPermissions
             ->map(fn($permission) => $this->getStoredPermission($permission));
 
         $this->permission_ids = collect($this->permission_ids ?? [])
-            ->merge($this->getPermissionIds($permissions))
+            ->merge($this->extractPermissionIds($permissions))
             ->all();
 
         $this->save();
@@ -107,7 +107,7 @@ trait HasPermissions
      */
     public function syncPermissions(string|array|Permission|Collection ...$permissions): self
     {
-        $this->permission_ids = $this->getPermissionIds($permissions);
+        $this->permission_ids = $this->extractPermissionIds($permissions);
 
         $this->save();
 
@@ -131,7 +131,7 @@ trait HasPermissions
             ->flatten()
             ->map(fn($permission) => $this->getStoredPermission($permission));
 
-        $permissionIds = $this->getPermissionIds($permissions);
+        $permissionIds = $this->extractPermissionIds($permissions);
 
         $this->permission_ids = collect($this->permission_ids ?? [])
             ->filter(function ($permission) use ($permissionIds) {
@@ -472,10 +472,12 @@ trait HasPermissions
     }
 
     /**
+     * Extract permission IDs from given permissions (internal use)
+     *
      * @param string|array|Permission|Collection $permissions
      * @return array
      */
-    protected function getPermissionIds(...$permissions): array
+    protected function extractPermissionIds(...$permissions): array
     {
         return collect($permissions)
             ->flatten()
