@@ -86,7 +86,7 @@ class PermissionDirectives
      */
     private function extractRoleGuard($arguments): array
     {
-        $arguments = preg_replace('([() ])', '', $arguments);
+        $arguments = preg_replace('/[() ]/', '', $arguments);
 
         return explode(',', $arguments . ',');
     }

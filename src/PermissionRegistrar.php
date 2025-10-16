@@ -8,6 +8,7 @@ use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Collection;
 use Maklad\Permission\Contracts\PermissionInterface as Permission;
+use Maklad\Permission\Events\PermissionCacheFlushed;
 
 /**
  * Class PermissionRegistrar
@@ -15,25 +16,20 @@ use Maklad\Permission\Contracts\PermissionInterface as Permission;
  */
 class PermissionRegistrar
 {
-    protected Gate $gate;
-
-    protected Repository $cache;
-
-    protected string $cacheKey = 'maklad.permission.cache';
-
-    protected string $permissionClass;
-
-    protected string $roleClass;
+    protected readonly string $cacheKey;
+    protected readonly string $permissionClass;
+    protected readonly string $roleClass;
 
     /**
      * PermissionRegistrar constructor.
      * @param Gate $gate
      * @param Repository $cache
      */
-    public function __construct(Gate $gate, Repository $cache)
-    {
-        $this->gate = $gate;
-        $this->cache = $cache;
+    public function __construct(
+        protected readonly Gate $gate,
+        protected readonly Repository $cache
+    ) {
+        $this->cacheKey = 'maklad.permission.cache';
         $this->permissionClass = config('permission.models.permission');
         $this->roleClass = config('permission.models.role');
     }
@@ -60,6 +56,9 @@ class PermissionRegistrar
     public function forgetCachedPermissions(): void
     {
         $this->cache->forget($this->cacheKey);
+
+        // Dispatch cache flush event
+        PermissionCacheFlushed::dispatch('permission_update');
     }
 
     /**

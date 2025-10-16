@@ -29,6 +29,9 @@ class TestSeeder extends Seeder
         $this->app[Permission::class]->create(['name' => 'edit-articles']);
         $this->app[Permission::class]->create(['name' => 'edit-news']);
         $this->app[Permission::class]->create(['name' => 'edit-categories']);
+        $this->app[Permission::class]->create(['name' => 'edit-blog']);
+        $this->app[Permission::class]->create(['name' => 'publish']);
+        $this->app[Permission::class]->create(['name' => 'moderate']);
         $this->app[Permission::class]->create(['name' => 'admin-permission', 'guard_name' => 'admin']);
     }
 }

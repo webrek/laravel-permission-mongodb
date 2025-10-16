@@ -48,10 +48,20 @@ return [
     ],
 
     /*
-     * By default all permissions will be cached for 24 hours unless a permission or
-     * role is updated. Then the cache will be flushed immediately.
+     * Cache configuration for permissions.
+     *
+     * - store: The cache store to use (null for default, 'redis', 'array', 'file', etc.)
+     * - expiration_time: Cache duration in minutes (default: 24 hours)
+     * - key: The cache key prefix
      */
 
+    'cache' => [
+        'store' => env('PERMISSION_CACHE_STORE', null),
+        'expiration_time' => env('PERMISSION_CACHE_EXPIRATION', 60 * 24),
+        'key' => env('PERMISSION_CACHE_KEY', 'maklad.permission.cache'),
+    ],
+
+    // Deprecated: Use cache.expiration_time instead
     'cache_expiration_time' => 60 * 24,
 
     /*

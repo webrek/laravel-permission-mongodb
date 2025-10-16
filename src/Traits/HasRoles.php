@@ -7,6 +7,8 @@ use MongoDB\Laravel\Eloquent\Builder;
 use MongoDB\Laravel\Eloquent\Model;
 use MongoDB\Laravel\Relations\BelongsToMany;
 use Maklad\Permission\Contracts\RoleInterface as Role;
+use Maklad\Permission\Events\RoleAssigned as RoleAssignedEvent;
+use Maklad\Permission\Events\RoleRevoked as RoleRevokedEvent;
 use Maklad\Permission\Helpers;
 use Maklad\Permission\PermissionRegistrar;
 use ReflectionException;
@@ -20,7 +22,7 @@ trait HasRoles
 {
     use HasPermissions;
 
-    private $roleClass;
+    private ?Role $roleClass = null;
 
     public static function bootHasRoles(): void
     {
@@ -33,18 +35,15 @@ trait HasRoles
         });
     }
 
-    public function getRoleClass()
+    public function getRoleClass(): Role
     {
-        if ($this->roleClass === null) {
-            $this->roleClass = app(PermissionRegistrar::class)->getRoleClass();
-        }
-        return $this->roleClass;
+        return $this->roleClass ??= app(PermissionRegistrar::class)->getRoleClass();
     }
 
     /**
      * A model may have multiple roles.
      */
-    public function roles(): BelongsToMany|\Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function roles(): BelongsToMany
     {
         return $this->belongsToMany(config('permission.models.role'));
     }
@@ -57,7 +56,7 @@ trait HasRoles
      *
      * @return Builder
      */
-    public function scopeRole(Builder $query, $roles): Builder
+    public function scopeRole(Builder $query, string|array|Role|Collection $roles): Builder
     {
         $roles = $this->convertToRoleModels($roles);
 
@@ -69,26 +68,25 @@ trait HasRoles
      *
      * @param array|string|Role ...$roles
      *
-     * @return array|Role|string
+     * @return self
      * @throws ReflectionException
      */
-    public function assignRole(...$roles)
+    public function assignRole(string|array|Role ...$roles): self
     {
         $roles = collect($roles)
             ->flatten()
-            ->map(function ($role) {
-                return $this->getStoredRole($role);
-            })
-            ->each(function ($role) {
-                $this->ensureModelSharesGuard($role);
-            })
+            ->map(fn($role) => $this->getStoredRole($role))
+            ->each(fn($role) => $this->ensureModelSharesGuard($role))
             ->all();
 
         $this->roles()->saveMany($roles);
 
+        // Dispatch events for each role assigned
+        collect($roles)->each(fn($role) => RoleAssignedEvent::dispatch($this, $role));
+
         $this->forgetCachedPermissions();
 
-        return $roles;
+        return $this;
     }
 
     /**
@@ -96,9 +94,9 @@ trait HasRoles
      *
      * @param array|string|Role ...$roles
      *
-     * @return array|Role|string
+     * @return self
      */
-    public function removeRole(...$roles)
+    public function removeRole(string|array|Role ...$roles): self
     {
         collect($roles)
             ->flatten()
@@ -106,27 +104,30 @@ trait HasRoles
                 $role = $this->getStoredRole($role);
                 $this->roles()->detach($role);
 
+                // Dispatch event for role revoked
+                RoleRevokedEvent::dispatch($this, $role);
+
                 return $role;
             });
 
         $this->forgetCachedPermissions();
 
-        return $roles;
+        return $this;
     }
 
     /**
      * Remove all current roles and set the given ones.
      *
-     * @param array ...$roles
+     * @param array|string|Role ...$roles
      *
-     * @return array|Role|string
+     * @return self
      * @throws ReflectionException
      */
-    public function syncRoles(...$roles): Role|array|string
+    public function syncRoles(string|array|Role ...$roles): self
     {
         $this->roles()->sync([]);
 
-        return $this->assignRole($roles);
+        return $this->assignRole(...$roles);
     }
 
     /**
@@ -136,7 +137,7 @@ trait HasRoles
      *
      * @return bool
      */
-    public function hasRole($roles): bool
+    public function hasRole(string|array|Role|Collection $roles): bool
     {
         if (\is_string($roles) && str_contains($roles, '|')) {
             $roles = \explode('|', $roles);
@@ -160,7 +161,7 @@ trait HasRoles
      *
      * @return bool
      */
-    public function hasAnyRole($roles): bool
+    public function hasAnyRole(string|array|Role|Collection $roles): bool
     {
         return $this->hasRole($roles);
     }
@@ -168,11 +169,11 @@ trait HasRoles
     /**
      * Determine if the model has all the given role(s).
      *
-     * @param $roles
+     * @param string|array|Role|Collection ...$roles
      *
      * @return bool
      */
-    public function hasAllRoles(...$roles): bool
+    public function hasAllRoles(string|array|Role|Collection ...$roles): bool
     {
         $helpers = new Helpers();
         $roles = $helpers->flattenArray($roles);
@@ -188,12 +189,12 @@ trait HasRoles
     /**
      * Return Role object
      *
-     * @param String|Role $role role name
+     * @param string|Role $role role name
      *
      * @return Role
      * @throws ReflectionException
      */
-    protected function getStoredRole($role): Role
+    protected function getStoredRole(string|Role $role): Role
     {
         if (\is_string($role)) {
             return $this->getRoleClass()->findByName($role, $this->getDefaultGuardName());
@@ -213,13 +214,63 @@ trait HasRoles
     }
 
     /**
-     * Convert to Role Models
-     *
-     * @param $roles
+     * Return a collection of role IDs associated with this user.
      *
      * @return Collection
      */
-    private function convertToRoleModels($roles): Collection
+    public function getRoleIds(): Collection
+    {
+        return $this->roles()->pluck('_id');
+    }
+
+    /**
+     * Determine if the model has exactly the given roles (no more, no less).
+     *
+     * @param string|array|Role|Collection ...$roles
+     * @return bool
+     */
+    public function hasExactRoles(string|array|Role|Collection ...$roles): bool
+    {
+        $helpers = new Helpers();
+        $roles = collect($helpers->flattenArray($roles));
+
+        $currentRoles = $this->getRoleNames();
+
+        return $currentRoles->sort()->values()->toArray() ===
+               $roles->map(fn($role) => is_string($role) ? $role : $role->name)
+                     ->sort()
+                     ->values()
+                     ->toArray();
+    }
+
+    /**
+     * Get the count of roles assigned to the model.
+     *
+     * @return int
+     */
+    public function getRolesCount(): int
+    {
+        return $this->roles()->count();
+    }
+
+    /**
+     * Determine if the model has no roles.
+     *
+     * @return bool
+     */
+    public function hasNoRoles(): bool
+    {
+        return $this->roles()->isEmpty();
+    }
+
+    /**
+     * Convert to Role Models
+     *
+     * @param string|array|Role|Collection $roles
+     *
+     * @return Collection
+     */
+    private function convertToRoleModels(string|array|Role|Collection $roles): Collection
     {
         if (is_array($roles)) {
             $roles = collect($roles);

@@ -1,0 +1,14 @@
+{
+    "bootstrap": "vendor/autoload.php",
+    "path": "benchmarks",
+    "reports": {
+        "default": {
+            "generator": "table",
+            "cols": ["benchmark", "subject", "set", "revs", "iter", "mem_peak", "time_avg", "comp_z_value", "comp_deviation"],
+            "break": ["benchmark"],
+            "sort": {
+                "benchmark": "asc"
+            }
+        }
+    }
+}

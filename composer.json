@@ -1,8 +1,11 @@
 {
     "name": "webrek/laravel-permission-mongodb",
-    "description": "Permission handling for Laravel 5.2 and up using mongodb",
+    "description": "Permission handling for Laravel 10.x, 11.x, and 12.x using MongoDB",
     "keywords": [
         "laravel",
+        "laravel 10",
+        "laravel 11",
+        "laravel 12",
         "security",
         "mongodb",
         "permission",
@@ -35,17 +38,21 @@
         }
     ],
     "require": {
-        "php": "^8.1",
-        "illuminate/auth": "^10.0",
-        "illuminate/container": "^10.0",
-        "illuminate/contracts": "^10.0",
-        "mongodb/laravel-mongodb": "v4.0.0"
+        "php": "^8.2",
+        "illuminate/auth": "^10.0|^11.0|^12.0",
+        "illuminate/container": "^10.0|^11.0|^12.0",
+        "illuminate/contracts": "^10.0|^11.0|^12.0",
+        "mongodb/laravel-mongodb": "^5.2"
     },
     "require-dev": {
         "monolog/monolog": "^3.2",
-        "orchestra/testbench": "^8.0",
-        "phpunit/phpunit": "^9.5.10",
-        "squizlabs/php_codesniffer": "^3.7"
+        "orchestra/testbench": "^8.0|^9.0|^10.0",
+        "phpunit/phpunit": "^10.0|^11.0",
+        "squizlabs/php_codesniffer": "^3.7",
+        "phpstan/phpstan": "^1.10",
+        "vimeo/psalm": "^5.0",
+        "phpbench/phpbench": "^1.2",
+        "mockery/mockery": "^1.6"
     },
     "autoload": {
         "psr-4": {
@@ -59,8 +66,17 @@
     },
     "scripts": {
         "test": "phpunit",
-        "check-style": "phpcs --standard=psr2 src/",
-        "fix-style": "phpcbf --standard=psr2 src/"
+        "test:coverage": "phpunit --coverage-html build/coverage",
+        "check-style": "phpcs --standard=PSR12 src/",
+        "fix-style": "phpcbf --standard=PSR12 src/",
+        "analyse": "phpstan analyse src/ tests/ --level=6",
+        "psalm": "psalm --show-info=true",
+        "bench": "phpbench run benchmarks/ --report=default",
+        "quality": [
+            "@check-style",
+            "@analyse",
+            "@test"
+        ]
     },
     "config": {
         "sort-packages": true

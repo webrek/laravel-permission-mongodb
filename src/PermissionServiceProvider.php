@@ -36,13 +36,25 @@ class PermissionServiceProvider extends ServiceProvider
             $this->commands([
                 Commands\CreateRole::class,
                 Commands\CreatePermission::class,
+                Commands\SyncPermissions::class,
+                Commands\ShowPermissions::class,
+                Commands\CheckPermission::class,
+                Commands\ExportPermissions::class,
+                Commands\ImportPermissions::class,
+                Commands\CleanPermissions::class,
             ]);
         }
 
         $this->registerModelBindings();
 
-        DB::connection()->getPdo();
-        app(PermissionRegistrar::class)->registerPermissions();
+        try {
+            DB::connection()->getPdo();
+            app(PermissionRegistrar::class)->registerPermissions();
+        } catch (\Exception $exception) {
+            if ($this->app->config['permission.log_registration_exception'] ?? true) {
+                \Log::warning('Permission registration failed: ' . $exception->getMessage());
+            }
+        }
     }
 
     public function register()

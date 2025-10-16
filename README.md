@@ -66,25 +66,34 @@ $user->can('edit articles');
 
 ### Laravel Compatibility
 
- Laravel  | Package
-:---------|:----------
- 5.x      | 1.x or 2.x or 3.x
- 6.x      | 2.x or 3.x
- 7.x      | 3.x
- 8.x      | 3.1.x
- 9.x      | 4.x
+ Laravel  | Package | PHP
+:---------|:--------|:----
+ 5.x      | 1.x, 2.x, 3.x | 7.0+
+ 6.x      | 2.x, 3.x | 7.2+
+ 7.x      | 3.x | 7.2+
+ 8.x      | 3.1.x | 7.3+
+ 9.x      | 4.x | 8.0+
+ 10.x     | 6.x | 8.2+
+ 11.x     | 6.x | 8.2+
+ 12.x     | 6.x | 8.2+
 
 ### Laravel
 
 You can install the package via composer:
 
-For laravel 9.x use
+For Laravel 10.x, 11.x, and 12.x use
 
 ``` bash
-composer require mostafamaklad/laravel-permission-mongodb
+composer require webrek/laravel-permission-mongodb
 ```
 
-For laravel 8.x and older use
+For Laravel 9.x use
+
+``` bash
+composer require mostafamaklad/laravel-permission-mongodb:"^4.0"
+```
+
+For Laravel 8.x and older use
 
 ``` bash
 composer require mostafamaklad/laravel-permission-mongodb:"^3.1"
