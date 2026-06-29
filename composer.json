@@ -78,6 +78,7 @@
             "@test"
         ]
     },
+    "abandoned": "webrek/laravel-mongo-permission",
     "config": {
         "sort-packages": true
     },

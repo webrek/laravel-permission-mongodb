@@ -2,13 +2,24 @@
 
 [![Latest Version on Packagist][ico-version]][link-packagist]
 [![Software License][ico-license]](LICENSE.md)
-[![Build Status][ico-build]][link-build]
 [![Total Downloads][ico-downloads]][link-packagist]
+
+> ## ⚠️ Abandoned — use [`webrek/laravel-mongo-permission`][link-replacement] instead
+>
+> This was a quick fork of [`mostafamaklad/laravel-permission-mongodb`][link-upstream] and it is no longer maintained. It still ships the upstream `Maklad\Permission\` namespace and was never properly rebranded.
+>
+> For new projects, install the maintained, built-from-scratch package: **[`webrek/laravel-mongo-permission`][link-replacement]** — native MongoDB, `spatie/laravel-permission`-compatible API, supported on current Laravel.
+>
+> ```bash
+> composer require webrek/laravel-mongo-permission
+> ```
+>
+> The rest of this README is kept for existing installs only.
+
+---
 
 This package allows you to manage user permissions and roles in a database.
 It is inspired from [laravel-permission][link-laravel-permission]. Same code, same everything, but compatible with [laravel-mongodb][link-laravel-mongodb].
-
-> **Fork notice.** This is a maintained fork of [`mostafamaklad/laravel-permission-mongodb`][link-upstream] kept current with recent Laravel and `mongodb/laravel-mongodb` releases. The PHP namespace is still `Maklad\Permission\` for drop-in compatibility, so `use` statements and config below are unchanged from upstream.
 
 Once installed you can do stuff like this:
 
@@ -790,9 +801,7 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 [ico-license]: https://img.shields.io/packagist/l/webrek/laravel-permission-mongodb.svg?style=flat-square
 [ico-downloads]: https://img.shields.io/packagist/dt/webrek/laravel-permission-mongodb.svg?style=flat-square
 
-[link-build]: https://github.com/webrek/laravel-permission-mongodb/actions/workflows/tests.yml
-[ico-build]: https://img.shields.io/github/actions/workflow/status/webrek/laravel-permission-mongodb/tests.yml?branch=master&style=flat-square
-
+[link-replacement]: https://github.com/webrek/laravel-mongo-permission
 [link-upstream]: https://github.com/mostafamaklad/laravel-permission-mongodb
 [link-author]: https://github.com/mostafamaklad
 [link-webrek]: https://github.com/webrek
